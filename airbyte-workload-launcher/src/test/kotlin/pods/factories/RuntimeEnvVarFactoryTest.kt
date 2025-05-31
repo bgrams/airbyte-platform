@@ -127,6 +127,36 @@ class RuntimeEnvVarFactoryTest {
   }
 
   @Test
+  fun `builds aws env vars if enterprise and airbyte connector`() {
+    every { ffClient.boolVariation(InjectAwsSecretsToConnectorPods, any()) } returns false
+    val config =
+      IntegrationLauncherConfig()
+        .withIsCustomConnector(false)
+        .withWorkspaceId(workspaceId)
+
+    factory =
+      spyk(
+        RuntimeEnvVarFactory(
+          connectorAwsAssumedRoleSecretEnvList,
+          stagingMountPath,
+          CONTAINER_ORCH_JAVA_OPTS,
+          false,
+          connectorApmSupportHelper,
+          ffClient,
+          AirbyteEdition.ENTERPRISE,
+        ),
+      )
+
+    val result = factory.resolveAwsAssumedRoleEnvVars(config)
+    val assumedRoleExternalIdEnvVar = EnvVar(AWS_ASSUME_ROLE_EXTERNAL_ID, workspaceId.toString(), null)
+
+    assertEquals(
+      connectorAwsAssumedRoleSecretEnvList + assumedRoleExternalIdEnvVar,
+      result,
+    )
+  }
+
+  @Test
   fun `adds apm env vars if enabled (mutative API)`() {
     val image = "image-name"
     val context = Connection(UUID.randomUUID())

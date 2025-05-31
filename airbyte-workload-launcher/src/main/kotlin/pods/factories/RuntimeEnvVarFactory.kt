@@ -244,8 +244,10 @@ class RuntimeEnvVarFactory(
     }
     // Only inject into enabled workspaces.
     val workspaceEnabled =
-      launcherConfig.workspaceId != null &&
-        this.featureFlagClient.boolVariation(InjectAwsSecretsToConnectorPods, Workspace(launcherConfig.workspaceId))
+      launcherConfig.workspaceId != null && (
+        this.featureFlagClient.boolVariation(InjectAwsSecretsToConnectorPods, Workspace(launcherConfig.workspaceId)) ||
+        this.airbyteEdition == Configs.AirbyteEdition.ENTERPRISE)
+
     if (!workspaceEnabled) {
       return listOf()
     }
